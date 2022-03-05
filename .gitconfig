@@ -1,0 +1,16 @@
+[user]
+	name = Siddeshwar
+	email = siddeshwar.work@gmail.com
+[credential]
+	helper = store
+[core]
+	excludesfile = ~/.gitconfig-ignore
+	editor = vim
+[alias]
+    s = status -sb
+    l = log --graph --abbrev-commit --decorate --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(white)%s%C(reset) %C(dim white)- %an%C(reset)%C(auto)%d%C(reset)' --all
+    b = for-each-ref --sort=committerdate refs/heads/ --format='%(HEAD) %(align:35)%(color:yellow)%(refname:short)%(color:reset)%(end) - %(color:red)%(objectname:short)%(color:reset) - %(align:40)%(contents:subject)%(end) - %(authorname) (%(color:green)%(committerdate:relative)%(color:reset))'
+    c = commit -am
+    co = checkout
+    wl = worktree list
+    wa = worktree add

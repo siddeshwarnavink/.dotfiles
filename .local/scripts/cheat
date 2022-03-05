@@ -1,0 +1,4 @@
+#!/bin/bash
+
+CHEAT=$(curl -s cheat.sh/$1)
+echo "$CHEAT" | sed -r 's/\x1B\[[0-9;]*[mK]//g'

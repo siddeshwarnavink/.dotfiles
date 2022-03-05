@@ -1,0 +1,10 @@
+#!/bin/bash
+
+name=$(basename "$(pwd)")
+
+if [[ -n "$TMUX" ]]; then
+	tmux new-session -d -s "$name"
+	tmux switch-client -t "$name"
+else
+	tmux -u new-session -s "$name"
+fi
