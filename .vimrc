@@ -7,6 +7,8 @@ let mapleader = ','
 let maplocalleader = ';'
 
 set nocompatible
+set encoding=utf-8
+set updatetime=300
 set shortmess+=I
 set exrc
 set autoread autowrite
@@ -30,7 +32,7 @@ let &undodir = $HOME . "/.vim/undodir"
 set undofile
 set path=**
 set wildmenu
-set wildignore=*.o,*.class
+set wildignore=*.o,*.class,*/node_modules/*
 set omnifunc=syntaxcomplete#Complete
 set completefunc=syntaxcomplete#Complete
 set pastetoggle=<F2>
@@ -183,6 +185,29 @@ nnoremap <silent> <leader>gs :Git<CR>
 nnoremap <silent> <leader>gd :Gdiffsplit<CR>
 
 autocmd FileType c,cpp,java setlocal commentstring=//\ %s
+
+function! LspMode()
+  try
+    packadd coc.nvim
+    set signcolumn=yes
+    nmap <silent><nowait> K <Plug>(coc-hover)
+    nmap <silent><nowait> <C-]> <Plug>(coc-definition)
+    xmap = <Plug>(coc-format-selected)
+    nmap <leader>= mzvip<Plug>(coc-format-selected)<CR>`z
+    nmap <silent><nowait> [d <Plug>(coc-diagnostic-prev)
+    nmap <silent><nowait> ]d <Plug>(coc-diagnostic-next)
+    nmap <silent><nowait> <leader>rn <Plug>(coc-rename)
+    nmap <silent><nowait> <leader>ca <Plug>(coc-codeaction)
+  catch
+    return
+  endtry
+endfunction
+command! LspMode call LspMode()
+
+augroup lsp_mode
+  autocmd!
+  autocmd FileType java,typescript,javascript,typescriptreact,javascriptreact call LspMode()
+augroup END
 " }}}
 " Section: Misc {{{
 autocmd InsertEnter * set nopaste
