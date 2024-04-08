@@ -1,7 +1,6 @@
 " Section: Bootstrap {{{
-if filereadable($VIMRUNTIME.'/defaults.vim')
-  source $VIMRUNTIME/defaults.vim
-endif
+filetype plugin indent on
+syntax on
 
 let mapleader = ','
 let maplocalleader = ';'
@@ -36,9 +35,12 @@ set wildignore=*.o,*.class,*/node_modules/*
 set omnifunc=syntaxcomplete#Complete
 set completefunc=syntaxcomplete#Complete
 set pastetoggle=<F2>
-set background=light
-set laststatus=0
+set background=dark
+set laststatus=2
+set statusline=[%n]\ %<%.99f\ %y%h%w%m%r%=%-14.(%l,%c%V%)\ %P
 set ruler
+set redrawtime=10000 " handle big files
+set mouse=a
 " }}}
 " Section: Remaps {{{
 nnoremap <silent> <Esc> :nohl<CR>
@@ -57,16 +59,7 @@ cnoremap <Esc><C-F>	<S-Right>
 vnoremap < <gv
 vnoremap > >gv
 
-nnoremap <tab>h <C-w>h
-nnoremap <tab>j <C-w>j
-nnoremap <tab>k <C-w>k
-nnoremap <tab>l <C-w>l
 nnoremap <silent> <tab><tab> :b#<CR>
-
-nnoremap <silent> <M-Left> :vertical resize +2<CR>
-nnoremap <silent> <M-Right> :vertical resize -2<CR>
-nnoremap <silent> <M-Up> :resize +1<CR>
-nnoremap <silent> <M-Down> :resize -1<CR>
 
 nnoremap <leader>p "+p
 imap <leader>p <C-r>+
@@ -75,8 +68,6 @@ cmap <leader>p <C-r>+
 " indent current paragraph
 nnoremap <leader>= mz=ap`z
 
-nnoremap <silent> [b :bprev<CR>
-nnoremap <silent> ]b :bnext<CR>
 nnoremap <silent> <leader>bd :bdelete!<CR>
 nnoremap <silent> <leader>bD :bufdo bdelete!<CR>e .<CR>
 
@@ -95,45 +86,31 @@ nnoremap <silent> <leader>cc :call ToggleQuickfix()<CR>
 vnoremap <silent> K :m '<-2<CR>gv=gv
 vnoremap <silent> J :m '>+1<CR>gv=gv
 
-nnoremap <silent> <leader>w :write<CR>
-nnoremap <silent> <leader>W :wall<CR>
-nnoremap <silent> <leader>q :quit!<CR>
-nnoremap <silent> <leader>Q :quitall!<CR>
-nnoremap <silent> <leader>o :only<CR>
 nnoremap <silent> <leader>z :setlocal spell!<CR>
+nnoremap <silent> <leader>l :setlocal list!<CR>
 
 " duplicate line
 nnoremap <silent> <leader>d :let c = getpos(".")<CR>Yp:call setpos(".", [c[0], c[1] + 1, c[2], c[3]])<CR>
 
 " replace word under cursor
 nnoremap <leader>s /\<<C-R>=expand('<cword>')<CR>\>\C<CR>``cgn
-nnoremap <leader>S :%s/\<<C-r><C-w>\>/
+nnoremap <leader>S :%s/\<<C-r><C-w>\>/<C-r><C-w>
 
 " grep word under cursor
-nnoremap <leader>* :execute 'grep! ' . expand('<cword>') . ' **/*'<CR>:copen<CR>
-
-if has('terminal')
-  " nnoremap <silent> <leader>xx :tab term<CR>"
-  nnoremap <silent> <leader>xx :term ++curwin<CR>
-  nnoremap <silent> <leader>xb :bot term<CR>
-
-  tnoremap <Esc><Esc> <C-\><C-n>
-  tmap <leader>p <C-W>"+
-
-  tnoremap <tab>h <C-w>h
-  tnoremap <tab>j <C-w>j
-  tnoremap <tab>k <C-w>k
-  tnoremap <tab>l <C-w>l
-  tnoremap <silent> <tab><tab> <C-w>:b#<CR>
-
-  tnoremap <silent> <M-Left> <C-\><C-n>:vertical resize +2<CR>
-  tnoremap <silent> <M-Right> <C-\><C-n>:vertical resize -2<CR>
-  tnoremap <silent> <M-Up> <C-\><C-n>:resize +1<CR>
-  tnoremap <silent> <M-Down> <C-\><C-n>:resize -1<CR>
+if has('win32') || has('win64')
+  set grepprg=grep\ -nH\ $*
+  set grepformat=%f:%l:%m
+  nnoremap <leader>* :execute 'silent! grep! ' . expand('<cword>') . ' *' <CR> :copen<CR>
+else
+  nnoremap <leader>* :execute 'silent! grep! "\<'.expand('<cword>').'\>" **/*'<CR>:copen<CR>
 endif
+
+" fix syntax in large codebase
+noremap <silent> <F12> <Esc>:syntax sync fromstart<CR>
 " }}}
 " Section: Plugins {{{
 let g:netrw_banner = 0
+let g:netrw_keepdir = 0
 let g:netrw_list_hide='\.swp$'
 
 nnoremap <silent> - :Explore<CR>
@@ -143,6 +120,8 @@ function! NetrwMapping()
   nmap <buffer> <S-space> mu
   nmap <buffer> m? :echo join(netrw#Expose("netrwmarkfilelist"), "\n")<CR>
   nmap <buffer> t? :echo 'Target:' . netrw#Expose("netrwmftgt")<CR>
+  nmap <buffer> mC mtmc
+  nmap <buffer> mM mtmm
 endfunction
 
 augroup netrw_mapping
@@ -150,16 +129,14 @@ augroup netrw_mapping
   autocmd filetype netrw call NetrwMapping()
 augroup END
 
+hi! link netrwMarkFile Search
+
 if !exists('g:loaded_matchit')
   runtime! macros/matchit.vim
 endif
 
 if !exists('g:loaded_man')
   runtime ftplugin/man.vim
-endif
-
-if has('packages')
-  silent! helptags ALL
 endif
 
 silent! colorscheme gruvbox
@@ -186,28 +163,31 @@ nnoremap <silent> <leader>gd :Gdiffsplit<CR>
 
 autocmd FileType c,cpp,java setlocal commentstring=//\ %s
 
-function! LspMode()
-  try
-    packadd coc.nvim
-    set signcolumn=yes
-    nmap <silent><nowait> K <Plug>(coc-hover)
-    nmap <silent><nowait> <C-]> <Plug>(coc-definition)
-    xmap = <Plug>(coc-format-selected)
-    nmap <leader>= mzvip<Plug>(coc-format-selected)<CR>`z
-    nmap <silent><nowait> [d <Plug>(coc-diagnostic-prev)
-    nmap <silent><nowait> ]d <Plug>(coc-diagnostic-next)
-    nmap <silent><nowait> <leader>rn <Plug>(coc-rename)
-    nmap <silent><nowait> <leader>ca <Plug>(coc-codeaction)
-  catch
-    return
-  endtry
-endfunction
-command! LspMode call LspMode()
+let g:lsp_use_native_client = 1
+let g:lsp_format_sync_timeout = 1000
+let g:lsp_diagnostics_highlights_enabled = 0
+let g:lsp_diagnostics_float_cursor = 1
+let g:lsp_diagnostics_virtual_text_enabled = 0
 
-augroup lsp_mode
-  autocmd!
-  autocmd FileType java,typescript,javascript,typescriptreact,javascriptreact call LspMode()
-augroup END
+function! s:LspBufferEnable()
+  setlocal omnifunc=lsp#complete
+  setlocal signcolumn=yes
+  if exists('+tagfunc') | setlocal tagfunc=lsp#tagfunc | endif
+  nmap <buffer> gd <plug>(lsp-definition)
+  nmap <buffer> gs <plug>(lsp-document-symbol-search)
+  nmap <buffer> gS <plug>(lsp-workspace-symbol-search)
+  nmap <buffer> gr <plug>(lsp-references)
+  nmap <buffer> gi <plug>(lsp-implementation)
+  nmap <buffer> gt <plug>(lsp-type-definition)
+  nmap <buffer> <leader>rn <plug>(lsp-rename)
+  nmap <buffer> [d <plug>(lsp-previous-diagnostic)
+  nmap <buffer> ]d <plug>(lsp-next-diagnostic)
+  nmap <buffer> K <plug>(lsp-hover)
+  nnoremap <leader>cf :LspDocumentFormat<CR>
+  nnoremap <leader>ca :LspCodeAction<CR>
+endfunction
+
+autocmd User lsp_buffer_enabled call s:LspBufferEnable()
 " }}}
 " Section: Misc {{{
 autocmd InsertEnter * set nopaste

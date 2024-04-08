@@ -1,5 +1,10 @@
+set guioptions+=!
 set guioptions-=m
 set guioptions-=T
+set guioptions-=e
+set guioptions-=L
+set guioptions-=r
+set mousemodel=popup
 if has('win32')
   let &guifont = 'Consolas:h14,Courier New:h14'
   set shell=powershell
