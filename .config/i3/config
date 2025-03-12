@@ -193,7 +193,7 @@ bar {
 exec --no-startup-id xmodmap ~/.Xmodmap
 
 # Apps
-bindsym $mod+Shift+v exec gvim
+bindsym $mod+Shift+v exec emacs
 bindsym $mod+Shift+f exec nemo
 bindsym $mod+Shift+b exec firefox
 
