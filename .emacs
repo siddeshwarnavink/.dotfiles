@@ -1,3 +1,5 @@
+;; Config for Emacs v29
+
 (setq inhibit-startup-screen t)
 (setq initial-scratch-message "")
 (tool-bar-mode 0)
@@ -26,13 +28,21 @@
 (setq create-lockfiles nil)
 
 (setq custom-file "~/.emacs.custom.el")
+(unless (file-exists-p custom-file)
+  (with-temp-buffer (write-file filename)))
 
-(set-face-attribute 'default nil :font "Monospace 14")
+(cond
+ ((eq system-type 'gnu/linux)
+  (set-face-attribute 'default nil :font "Monospace 14"))
+ ((eq system-type 'windows-nt)
+  (set-face-attribute 'default nil :font "Consolas 12")))
 
 (load-theme 'wombat t)
 
 (setq use-file-dialog nil)
 (setq ring-bell-function 'ignore)
+
+(defalias 'yes-or-no-p 'y-or-n-p)
 
 (setq display-line-numbers-type 'relative)
 (add-hook 'prog-mode-hook 'display-line-numbers-mode)
@@ -47,12 +57,13 @@
   (setq css-indent-offset n))
 (my/setup-indent 4)
 
-(global-set-key "\M- " 'hippie-expand)
-
 (setq dired-dwim-target t)
 
-(setq package-enable-at-startup nil)
+(global-set-key "\M- " 'hippie-expand)
+
+(require 'package)
 (setq package-archives '(("melpa" . "https://melpa.org/packages/")
+                         ("melpa-stable" . "https://stable.melpa.org/packages/")
                          ("gnu" . "https://elpa.gnu.org/packages/")))
 (unless package--initialized (package-initialize))
 
@@ -69,33 +80,33 @@
 (setq viper-no-multiple-ESC 't)
 (require 'viper)
 
-(define-key viper-insert-global-user-map (kbd "C-]") 'viper-change-state-to-vi)
 (define-key viper-vi-global-user-map (kbd "C-e") 'move-end-of-line)
 (define-key viper-vi-global-user-map (kbd "C-y") 'yank)
+(define-key viper-vi-global-user-map (kbd "gd") 'lsp-find-definition)
+
+(custom-set-faces '(viper-minibuffer-emacs ((t nil)))) ;; Get rid of ugly green overlay.
 
 ;; Ido
 (ido-mode 1)
 (ido-everywhere 1)
 
 ;; LSP
-(use-package exec-path-from-shell
-  :config
-  (exec-path-from-shell-initialize)
-  (exec-path-from-shell-copy-env "PATH"))
+(when (memq system-type '(gnu/linux))
+  (use-package exec-path-from-shell
+    :config
+    (exec-path-from-shell-initialize)
+    (exec-path-from-shell-copy-env "PATH")))
 
-(use-package eglot
-  :bind (:map eglot-mode-map
-              ("C-c <tab>" . company-complete)
-              ("C-c e g n" . flymake-goto-next-error)
-              ("C-c e g p" . flymake-goto-prev-error)
-              ("C-c e g d" . eglot-find-implementation)
-              ("C-c e r" . eglot-rename)
-              ("C-c e f" . eglot-format-buffer)
-              ("C-c e a" . eglot-code-actions))
-  :hook (typescript-mode . eglot-ensure))
+(use-package lsp-mode
+  :init
+  (setq lsp-keymap-prefix "C-c l")
+  :hook (((web-mode typescript-mode) . lsp-deferred))
+  :commands lsp
+  :custom
+  (lsp-headerline-breadcrumb-enable nil))
 
 (use-package company
-  :hook (eglot-managed-mode . company-mode)
+  :bind (("C-y" . company-complete-selection))
   :config
   (setq company-idle-delay 0.3
         company-minimum-prefix-length 3))
@@ -109,6 +120,12 @@
 
 ;; Major modes
 (use-package typescript-mode
-  :mode ("\\.ts\\'" "\\.tsx\\'"))
+  :mode (("\\.ts\\'" . typescript-mode)
+         ("\\.tsx\\'" . typescript-mode)))
+
+(use-package web-mode
+  :config
+  (setq web-mode-enable-auto-quoting nil))
+
 
 (load-file custom-file)
