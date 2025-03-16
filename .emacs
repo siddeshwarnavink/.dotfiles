@@ -1,4 +1,4 @@
-;; Config for Emacs v29
+;; Config for Emacs v29.3
 
 (setq inhibit-startup-screen t)
 (setq initial-scratch-message "")
@@ -29,7 +29,7 @@
 
 (setq custom-file "~/.emacs.custom.el")
 (unless (file-exists-p custom-file)
-  (with-temp-buffer (write-file filename)))
+  (with-temp-buffer (write-file custom-file)))
 
 (cond
  ((eq system-type 'gnu/linux)
@@ -57,9 +57,12 @@
   (setq css-indent-offset n))
 (my/setup-indent 4)
 
-(setq dired-dwim-target t)
+(setq dired-dwim-target 't)
 
+;; Keybinding
 (global-set-key "\M- " 'hippie-expand)
+(global-set-key (kbd "C-c d") 'duplicate-line)
+(global-set-key (kbd "C-c ;") 'comment-or-uncomment-region)
 
 (require 'package)
 (setq package-archives '(("melpa" . "https://melpa.org/packages/")
@@ -69,22 +72,6 @@
 
 (setq use-package-always-ensure t)
 (require 'use-package)
-
-;; Viper mode
-(setq viper-mode t)
-(setq viper-inhibit-startup-message 't)
-(setq viper-expert-level '5)
-(setq viper-vi-style-in-minibuffer nil)
-(setq viper-want-ctl-h-help 't)
-(setq viper-ex-style-editing nil)
-(setq viper-no-multiple-ESC 't)
-(require 'viper)
-
-(define-key viper-vi-global-user-map (kbd "C-e") 'move-end-of-line)
-(define-key viper-vi-global-user-map (kbd "C-y") 'yank)
-(define-key viper-vi-global-user-map (kbd "gd") 'lsp-find-definition)
-
-(custom-set-faces '(viper-minibuffer-emacs ((t nil)))) ;; Get rid of ugly green overlay.
 
 ;; Ido
 (ido-mode 1)
@@ -100,13 +87,10 @@
 (use-package lsp-mode
   :init
   (setq lsp-keymap-prefix "C-c l")
-  :hook (((web-mode typescript-mode) . lsp-deferred))
-  :commands lsp
-  :custom
-  (lsp-headerline-breadcrumb-enable nil))
+  :hook (((typescript-ts-mode tsx-ts-mode) . lsp-deferred))
+  :commands lsp)
 
 (use-package company
-  :bind (("C-y" . company-complete-selection))
   :config
   (setq company-idle-delay 0.3
         company-minimum-prefix-length 3))
@@ -118,14 +102,17 @@
 (use-package dtrt-indent
   :hook (prog-mode . dtrt-indent-mode))
 
-;; Major modes
-(use-package typescript-mode
-  :mode (("\\.ts\\'" . typescript-mode)
-         ("\\.tsx\\'" . typescript-mode)))
+;; Treesitter & Major modes
+(use-package tree-sitter
+  :hook ((typescript-ts-mode . tree-sitter-mode)
+         (typescript-ts-mode . tree-sitter-hl-mode)
+         (tsx-ts-mode . tree-sitter-mode)
+         (tsx-ts-mode . tree-sitter-hl-mode)))
 
-(use-package web-mode
-  :config
-  (setq web-mode-enable-auto-quoting nil))
+(use-package tree-sitter-langs
+  :after tree-sitter)
 
+(add-to-list 'auto-mode-alist '("\\.ts\\'" . typescript-ts-mode))
+(add-to-list 'auto-mode-alist '("\\.tsx\\'" . tsx-ts-mode))
 
 (load-file custom-file)
