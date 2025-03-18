@@ -7,6 +7,10 @@
 (scroll-bar-mode 0)
 (column-number-mode)
 
+;; Enable disabled functions
+(put 'downcase-region 'disabled nil)
+(put 'upcase-region 'disabled nil)
+
 ;; Global settings
 (setq backup-directory-alist `(("." . "~/.emacs.d/backups")))
 (setq backup-by-copying t)
@@ -47,7 +51,7 @@
 (setq display-line-numbers-type 'relative)
 (add-hook 'prog-mode-hook 'display-line-numbers-mode)
 
-(defun my/setup-indent (n)
+(defun sid-setup-indent (n)
   (setq-default tab-width n)
   (setq c-basic-offset n)
   (setq js-indent-level n)
@@ -55,15 +59,66 @@
   (setq web-mode-css-indent-offset n)
   (setq web-mode-code-indent-offset n)
   (setq css-indent-offset n))
-(my/setup-indent 4)
+(sid-setup-indent 4)
 
 (setq dired-dwim-target 't)
+(setq dired-recursive-copies 'always)
+(setq dired-recursive-deletes 'always)
 
 ;; Keybinding
 (global-set-key "\M- " 'hippie-expand)
 (global-set-key (kbd "C-c d") 'duplicate-line)
 (global-set-key (kbd "C-c ;") 'comment-or-uncomment-region)
+(global-set-key (kbd "C-c o") #'mode-line-other-buffer)
 
+(defun sid-kill-current-buffer()
+  "Kill the current buffer without confirmation."
+  (interactive)
+  (let ((kill-buffer-query-functions nil))
+    (kill-buffer (current-buffer))))
+(global-set-key (kbd "C-c k") 'sid-kill-current-buffer)
+
+
+(defun sid-join-line()
+  "Concatinate current line with next line."
+  (interactive)
+  (next-line)
+  (delete-indentation))
+(global-set-key (kbd "C-c j") 'sid-join-line)
+
+(defun sid-open-dired ()
+  "Open Dired for the directory of the current buffer's file."
+  (interactive)
+  (if buffer-file-name
+      (dired (file-name-directory buffer-file-name))
+    (message "Buffer is not visiting a file")))
+(global-set-key (kbd "C-c p") 'sid-open-dired)
+
+(defun sid-html-preview ()
+  "View the current buffer's HTML content in eww."
+  (interactive)
+  (let ((temp-file "/tmp/temp.html"))
+    (write-region (point-min) (point-max) temp-file)
+    (eww-open-file temp-file)))
+(global-set-key (kbd "C-c h") 'sid-html-preview)
+
+(defun sid-clear-and-reexecute()
+  "Clear and re-execute the inferior shell."
+  (interactive)
+  (comint-clear-buffer)
+  (comint-previous-input 0)
+  (comint-send-input))
+(with-eval-after-load 'shell
+  (define-key shell-mode-map (kbd "C-c r") 'sid-clear-and-reexecute))
+
+;; Macros
+(defalias 'html-li
+  (kmacro "< l i > C-e < / l i > C-n C-a"))
+
+(defalias 'cardio
+  (kmacro "C-x C-x C-SPC <return> C-p / * C-n C-a C-SPC C-s * <return> C-w C-e <backspace> <backspace> : C-n M-m C-d C-M-f C-f C-d C-d C-e <return> * C-n C-d C-e <backspace> <backspace> C-n M-m C-x SPC M-} C-x r t * <return> / C-SPC M-< C-M-\\"))
+
+;; Packages
 (require 'package)
 (setq package-archives '(("melpa" . "https://melpa.org/packages/")
                          ("melpa-stable" . "https://stable.melpa.org/packages/")
@@ -73,21 +128,42 @@
 (setq use-package-always-ensure t)
 (require 'use-package)
 
-;; Ido
-(ido-mode 1)
-(ido-everywhere 1)
-
-;; LSP
 (when (memq system-type '(gnu/linux))
   (use-package exec-path-from-shell
     :config
     (exec-path-from-shell-initialize)
     (exec-path-from-shell-copy-env "PATH")))
 
+;; Minibuffer
+(savehist-mode 1)
+(recentf-mode 1)
+
+(use-package vertico
+  :init
+  (vertico-mode)
+  :config
+  (setq vertico-count 6))
+
+(use-package marginalia
+  :config
+  (marginalia-mode 1))
+
+(use-package orderless
+  :config
+  (setq completion-styles '(orderless basic)))
+
+;; Editing
+(delete-selection-mode 1)
+
+(use-package multiple-cursors
+  :bind (("C->" . mc/mark-next-like-this)
+         ("C-<" . mc/mark-previous-like-this)
+         ("C-c C-<" . mc/mark-all-like-this)))
+
+;; LSP
 (use-package lsp-mode
   :init
   (setq lsp-keymap-prefix "C-c l")
-  :hook (((typescript-ts-mode tsx-ts-mode) . lsp-deferred))
   :commands lsp)
 
 (use-package company

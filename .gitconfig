@@ -14,3 +14,5 @@
     co = checkout
     wl = worktree list
     wa = worktree add
+[init]
+	defaultBranch = master
