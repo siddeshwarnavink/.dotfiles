@@ -1,4 +1,12 @@
-;; Config for Emacs v29.3
+;;
+;; Copyright (c) 2024 - Siddeshwar's Emacs experience.
+;;
+;;
+;; Config written for GNU Emacs v29.3.
+;; It probably won't work if you're not Siddeshwar.
+
+(setq user-full-name "Siddeshwar"
+      user-mail-address "siddeshwar.work@gmail.com")
 
 (setq inhibit-startup-screen t)
 (setq initial-scratch-message "")
@@ -35,13 +43,14 @@
 (unless (file-exists-p custom-file)
   (with-temp-buffer (write-file custom-file)))
 
+(setq kill-ring-max 1000)
 (cond
  ((eq system-type 'gnu/linux)
   (set-face-attribute 'default nil :font "Monospace 14"))
  ((eq system-type 'windows-nt)
   (set-face-attribute 'default nil :font "Consolas 12")))
 
-(load-theme 'wombat t)
+(load-theme 'modus-operandi t)
 
 (setq use-file-dialog nil)
 (setq ring-bell-function 'ignore)
@@ -77,7 +86,6 @@
   (let ((kill-buffer-query-functions nil))
     (kill-buffer (current-buffer))))
 (global-set-key (kbd "C-c k") 'sid-kill-current-buffer)
-
 
 (defun sid-join-line()
   "Concatinate current line with next line."
@@ -160,16 +168,17 @@
          ("C-<" . mc/mark-previous-like-this)
          ("C-c C-<" . mc/mark-all-like-this)))
 
-;; LSP
-(use-package lsp-mode
+;; Navigating
+(use-package dumb-jump
   :init
-  (setq lsp-keymap-prefix "C-c l")
-  :commands lsp)
-
-(use-package company
+  :bind (("M-g o" . dumb-jump-go-other-window)
+         ("M-g j" . dumb-jump-go)
+         ("M-g b" . dumb-jump-back)
+         ("M-g i" . dumb-jump-go-prompt)
+         ("M-g x" . dumb-jump-go-prefer-external)
+         ("M-g z" . dumb-jump-go-prefer-external-other-window))
   :config
-  (setq company-idle-delay 0.3
-        company-minimum-prefix-length 3))
+  (add-hook 'xref-backend-functions #'dumb-jump-xref-activate))
 
 ;; Misc
 (add-hook 'prog-mode-hook (lambda ()
@@ -190,5 +199,41 @@
 
 (add-to-list 'auto-mode-alist '("\\.ts\\'" . typescript-ts-mode))
 (add-to-list 'auto-mode-alist '("\\.tsx\\'" . tsx-ts-mode))
+
+;; Org mode
+(setq
+ org-auto-align-tags nil
+ org-tags-column 0
+ org-catch-invisible-edits 'show-and-error
+ org-special-ctrl-a/e t
+ org-insert-heading-respect-content t
+ org-hide-emphasis-markers t
+ org-pretty-entities t
+ org-agenda-tags-column 0
+ org-ellipsis "…")
+
+(defun sid-org-mode()
+  (setq line-spacing 0.33))
+
+(add-hook 'org-mode-hook 'sid-org-mode)
+
+(use-package org
+  :mode ("\\.org\\'" . org-mode)
+  :config
+  (require 'org)
+  (require 'ob)
+  (add-hook 'org-mode-hook (lambda () (require 'org-tempo))))
+
+(custom-set-faces
+ '(org-level-1 ((t (:inherit outline-1 :height 1.7))))
+ '(org-level-2 ((t (:inherit outline-2 :height 1.6))))
+ '(org-level-3 ((t (:inherit outline-3 :height 1.5))))
+ '(org-level-4 ((t (:inherit outline-4 :height 1.4))))
+ '(org-level-5 ((t (:inherit outline-5 :height 1.3))))
+ '(org-level-6 ((t (:inherit outline-5 :height 1.2))))
+ '(org-level-7 ((t (:inherit outline-5 :height 1.1)))))
+
+(use-package org-modern
+  :hook (org-mode . org-modern-mode))
 
 (load-file custom-file)
