@@ -13,7 +13,8 @@
 (tool-bar-mode 0)
 (menu-bar-mode 0)
 (scroll-bar-mode 0)
-(column-number-mode)
+(blink-cursor-mode 0)
+(tooltip-mode 0)
 
 ;; Enable disabled functions
 (put 'downcase-region 'disabled nil)
@@ -44,12 +45,19 @@
   (with-temp-buffer (write-file custom-file)))
 
 (setq kill-ring-max 1000)
-(cond
- ((eq system-type 'gnu/linux)
-  (set-face-attribute 'default nil :font "Monospace 14"))
- ((eq system-type 'windows-nt)
-  (set-face-attribute 'default nil :font "Consolas 12")))
+(defun sid-set-font (frame)
+  "Set the default font for the specified FRAME."
+  (select-frame frame)
+  (if (eq system-type 'gnu/linux)
+      (set-face-attribute 'default frame :font "Monospace 14")
+    (if (eq system-type 'windows-nt)
+        (set-face-attribute 'default frame :font "Consolas 12")
+      (if (eq system-type 'darwin)
+          (set-face-attribute 'default frame :font "Menlo 12")))))
+(sid-set-font (selected-frame))
+(add-hook 'after-make-frame-functions 'sid-set-font)
 
+;; UI
 (load-theme 'modus-operandi t)
 
 (setq use-file-dialog nil)
@@ -216,6 +224,7 @@
 
 ;; Editing
 (delete-selection-mode 1)
+(global-subword-mode 1)
 
 (use-package multiple-cursors
   :defer t
