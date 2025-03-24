@@ -1,0 +1,26 @@
+#!/bin/bash
+
+output_file="$HOME/Videos/screen_record_$(date +'%Y-%m-%d_%H-%M-%S').mkv"
+
+start_recording() {
+    ffmpeg -f x11grab -s $(xdpyinfo | grep dimensions | awk '{print $2;}') -i :0.0 \
+           -f pulse -ac 2 -i default \
+           -c:v libx264 -preset ultrafast -crf 18 -pix_fmt yuv420p \
+           -c:a aac -b:a 192k \
+           "$output_file"
+}
+
+stop_recording() {
+    pkill -INT -x ffmpeg
+}
+
+if [ "$1" == "start" ]; then
+    echo "Starting screen recording..."
+    start_recording
+elif [ "$1" == "stop" ]; then
+    echo "Stopping screen recording..."
+    stop_recording
+else
+    echo "Usage: $0 {start|stop}"
+    exit 1
+fi
