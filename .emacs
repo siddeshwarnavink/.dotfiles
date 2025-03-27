@@ -258,48 +258,6 @@
   :init
   (which-key-mode))
 
-(use-package embark
-  :bind (("C-." . embark-act)
-         ("C-;" . embark-dwim))
-  :config
-  (defun embark-which-key-indicator ()
-    (lambda (&optional keymap targets prefix)
-      (if (null keymap)
-          (which-key--hide-popup-ignore-command)
-        (which-key--show-keymap
-         (if (eq (plist-get (car targets) :type) 'embark-become)
-             "Become"
-           (format "Act on %s '%s'%s"
-                   (plist-get (car targets) :type)
-                   (embark--truncate-target (plist-get (car targets) :target))
-                   (if (cdr targets) "…" "")))
-         (if prefix
-             (pcase (lookup-key keymap prefix 'accept-default)
-               ((and (pred keymapp) km) km)
-               (_ (key-binding prefix 'accept-default)))
-           keymap)
-         nil nil t (lambda (binding)
-                     (not (string-suffix-p "-argument" (cdr binding))))))))
-  (setq embark-indicators
-        '(embark-which-key-indicator
-          embark-highlight-indicator
-          embark-isearch-highlight-indicator))
-
-  (defun embark-hide-which-key-indicator (fn &rest args)
-    "Hide the which-key indicator immediately when using the completing-read prompter."
-    (which-key--hide-popup-ignore-command)
-    (let ((embark-indicators
-           (remq #'embark-which-key-indicator embark-indicators)))
-      (apply fn args)))
-
-  (advice-add #'embark-completing-read-prompter
-              :around #'embark-hide-which-key-indicator))
-
-(use-package embark-consult
-  :after (embark consult)
-  :hook
-  (embark-collect-mode . consult-preview-at-point-mode))
-
 (use-package magit
   :defer t
   :commands (magit-status magit-get-current-branch)
@@ -310,7 +268,7 @@
 (add-hook 'prog-mode-hook (lambda ()
                             (add-hook 'before-save-hook 'delete-trailing-whitespace nil t)))
 
-;; Treesitter & Major modes
+;; Language specific modes
 (use-package tree-sitter
   :defer t
   :hook ((typescript-ts-mode . tree-sitter-mode)
@@ -325,6 +283,16 @@
 (add-to-list 'auto-mode-alist '("\\.ts\\'" . typescript-ts-mode))
 (add-to-list 'auto-mode-alist '("\\.tsx\\'" . tsx-ts-mode))
 
+(use-package clojure-mode
+  :defer t
+  :mode ("\\.clj\\'" "\\.cljs\\'" "\\.cljc\\'"))
+
+(use-package cider
+  :defer t
+  :hook (clojure-mode . cider-mode)
+  :config
+  (setq cider-repl-display-help-banner nil))
+
 ;; Org mode
 (setq
  org-auto-align-tags nil
@@ -338,6 +306,7 @@
  org-ellipsis "…")
 
 (defun sid-org-mode()
+  (local-set-key (kbd "C-c m") 'org-modern-mode)
   (setq line-spacing 0.33))
 (add-hook 'org-mode-hook 'sid-org-mode)
 
@@ -348,16 +317,11 @@
   (require 'ob)
   (add-hook 'org-mode-hook (lambda () (require 'org-tempo))))
 
-(custom-set-faces
- '(org-level-1 ((t (:inherit outline-1 :height 1.7))))
- '(org-level-2 ((t (:inherit outline-2 :height 1.6))))
- '(org-level-3 ((t (:inherit outline-3 :height 1.5))))
- '(org-level-4 ((t (:inherit outline-4 :height 1.4))))
- '(org-level-5 ((t (:inherit outline-5 :height 1.3))))
- '(org-level-6 ((t (:inherit outline-5 :height 1.2))))
- '(org-level-7 ((t (:inherit outline-5 :height 1.1)))))
-
 (use-package org-modern
-  :hook (org-mode . org-modern-mode))
+  :commands (org-modern-mode))
+
+(global-set-key (kbd "C-c a a") 'org-agenda)
+(setq org-agenda-files (list (expand-file-name "~/org/tasks.org")))
+(setq org-log-done 'time)
 
 (load-file custom-file)
