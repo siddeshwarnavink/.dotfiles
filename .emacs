@@ -58,7 +58,8 @@
 (add-hook 'after-make-frame-functions 'sid-set-font)
 
 ;; UI
-(load-theme 'modus-operandi t)
+;; (load-theme 'modus-operandi t)
+(load-theme 'wombat t)
 
 (setq use-file-dialog nil)
 (setq ring-bell-function 'ignore)
@@ -185,8 +186,14 @@
 (defalias 'cardio
   (kmacro "C-x C-x C-SPC <return> C-p / * C-n C-a C-SPC C-s * <return> C-w C-e <backspace> <backspace> : C-n M-m C-d C-M-f C-f C-d C-d C-e <return> * C-n C-d C-e <backspace> <backspace> C-n M-m C-x SPC M-} C-x r t * <return> / C-SPC M-< C-M-\\"))
 
-(defalias 'file-accept-all-lower-smerge\
-   (kmacro "<return> C-c s l C-x C-s C-c k"))
+(defalias 'magit-accept-all-lower-smerge\
+  (kmacro "<return> C-c s l C-x C-s C-c k"))
+
+(defalias 'clj-eval-comment
+  (kmacro "C-k C-SPC C-SPC C-u C-c C-e C-x C-x C-SPC SPC ; ; SPC"))
+
+(with-eval-after-load 'cider
+  (define-key cider-mode-map (kbd "<f5>") 'clj-eval-comment))
 
 ;; Packages
 (require 'package)
@@ -294,20 +301,18 @@
   (setq cider-repl-display-help-banner nil))
 
 ;; Org mode
-(setq
- org-auto-align-tags nil
- org-tags-column 0
- org-catch-invisible-edits 'show-and-error
- org-special-ctrl-a/e t
- org-insert-heading-respect-content t
- org-hide-emphasis-markers t
- org-pretty-entities t
- org-agenda-tags-column 0
- org-ellipsis "…")
+(setq ispell-program-name "hunspell")
+(setq ispell-dictionary "en_US")
+(setq ispell-local-dictionary-alist
+      '(("en_US" "[[:alpha:]]" "[^[:alpha:]]" "[-']" nil
+         ("-d" "en_US") nil utf-8)))
+
+(add-hook 'text-mode-hook #'flyspell-mode)
+
+(setq-default fill-column 80)
 
 (defun sid-org-mode()
-  (local-set-key (kbd "C-c m") 'org-modern-mode)
-  (setq line-spacing 0.33))
+  (local-set-key (kbd "C-c m") 'org-modern-mode))
 (add-hook 'org-mode-hook 'sid-org-mode)
 
 (use-package org
@@ -318,9 +323,10 @@
   (add-hook 'org-mode-hook (lambda () (require 'org-tempo))))
 
 (use-package org-modern
+  :defer t
   :commands (org-modern-mode))
 
-(global-set-key (kbd "C-c a a") 'org-agenda)
+(global-set-key (kbd "C-c a") 'org-agenda)
 (setq org-agenda-files (list (expand-file-name "~/org/tasks.org")))
 (setq org-log-done 'time)
 
