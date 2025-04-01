@@ -73,7 +73,8 @@
   (setq-default tab-width n)
   (setq c-basic-offset n)
   (setq js-indent-level n)
-  (setq css-indent-offset n))
+  (setq css-indent-offset n)
+  (setq indent-tabs-mode nil))
 (sid-setup-indent 4)
 
 (setq dired-dwim-target 't)
@@ -215,19 +216,7 @@
 (savehist-mode 1)
 (recentf-mode 1)
 
-(use-package vertico
-  :init
-  (vertico-mode)
-  :config
-  (setq vertico-count 6))
-
-(use-package marginalia
-  :config
-  (marginalia-mode 1))
-
-(use-package orderless
-  :config
-  (setq completion-styles '(orderless basic)))
+(fido-mode 1)
 
 ;; Editing
 (delete-selection-mode 1)
@@ -252,19 +241,7 @@
   :config
   (add-hook 'xref-backend-functions #'dumb-jump-xref-activate))
 
-(use-package consult
-  :defer t
-  :bind (("C-x b" . consult-buffer)
-         ("M-s r" . consult-ripgrep)
-         ("M-s l" . consult-line)
-         ("M-y"   . consult-yank-pop))
-  :init (setq consult-preview-key 'any))
-
 ;; Misc
-(use-package which-key
-  :init
-  (which-key-mode))
-
 (use-package magit
   :defer t
   :commands (magit-status magit-get-current-branch)
