@@ -8,14 +8,6 @@
 (setq user-full-name "Siddeshwar"
       user-mail-address "siddeshwar.work@gmail.com")
 
-(setq inhibit-startup-screen t)
-(setq initial-scratch-message "")
-(tool-bar-mode 0)
-(menu-bar-mode 0)
-(scroll-bar-mode 0)
-(blink-cursor-mode 0)
-(tooltip-mode 0)
-
 ;; Enable disabled functions
 (put 'downcase-region 'disabled nil)
 (put 'upcase-region 'disabled nil)
@@ -43,23 +35,31 @@
 (setq custom-file "~/.emacs.custom.el")
 (unless (file-exists-p custom-file)
   (with-temp-buffer (write-file custom-file)))
+(add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory))
 
 (setq kill-ring-max 1000)
 (defun sid-set-font (frame)
   "Set the default font for the specified FRAME."
   (select-frame frame)
-  (if (eq system-type 'gnu/linux)
-      (set-face-attribute 'default frame :font "Monospace 14")
-    (if (eq system-type 'windows-nt)
-        (set-face-attribute 'default frame :font "Consolas 12")
-      (if (eq system-type 'darwin)
-          (set-face-attribute 'default frame :font "Menlo 12")))))
+  (if (eq system-type 'windows-nt)
+      (set-face-attribute 'default frame :font "Consolas 18")
+    (set-face-attribute 'default frame :font "Monospace 18")))
 (sid-set-font (selected-frame))
 (add-hook 'after-make-frame-functions 'sid-set-font)
 
 ;; UI
-;; (load-theme 'modus-operandi t)
-(load-theme 'wombat t)
+(setq inhibit-startup-screen t)
+(setq initial-scratch-message "")
+
+(tool-bar-mode 0)
+(menu-bar-mode 0)
+(scroll-bar-mode 0)
+(blink-cursor-mode 0)
+(tooltip-mode 0)
+(column-number-mode 1)
+
+(require 'aanila-theme)
+(load-theme 'aanila t)
 
 (setq use-file-dialog nil)
 (setq ring-bell-function 'ignore)
@@ -77,11 +77,17 @@
   (setq indent-tabs-mode nil))
 (sid-setup-indent 4)
 
+(add-hook 'dired-mode-hook #'dired-hide-details-mode)
 (setq dired-dwim-target 't)
 (setq dired-recursive-copies 'always)
 (setq dired-recursive-deletes 'always)
 
+(setq search-default-regexp-mode t)
+(setq search-whitespace-regexp ".*")
+
 ;; Keybinding
+(global-set-key (kbd "C-x C-d") 'dired)
+(global-set-key (kbd "C-x C-b") 'switch-to-buffer)
 (global-set-key "\M- " 'hippie-expand)
 (global-set-key (kbd "C-c d") 'duplicate-line)
 (global-set-key (kbd "C-c ;") 'comment-or-uncomment-region)
@@ -153,11 +159,6 @@
   (local-set-key (kbd "C-c s u") 'sid-smerge-keep-upper-all))
 (add-hook 'smerge-mode-hook 'sid-smerge-mode-setup)
 
-(defun sid-git-rebase-accept-all-incomming (branch)
-  "Accept all incomming changes for all conflict."
-  (interactive "sRebase onto? ")
-  (async-shell-command (format "git rebase --strategy-option=theirs %s" branch)))
-
 (defun sid-save-file-path ()
   "Save the current file path to the kill ring if the buffer is visiting a file."
   (interactive)
@@ -179,22 +180,6 @@
       (yank)
       (message "Yanked from kill ring"))))
 (global-set-key (kbd "C-c y") 'sid-yank-relative-path)
-
-;; Macros
-(defalias 'html-li
-  (kmacro "< l i > C-e < / l i > C-n C-a"))
-
-(defalias 'cardio
-  (kmacro "C-x C-x C-SPC <return> C-p / * C-n C-a C-SPC C-s * <return> C-w C-e <backspace> <backspace> : C-n M-m C-d C-M-f C-f C-d C-d C-e <return> * C-n C-d C-e <backspace> <backspace> C-n M-m C-x SPC M-} C-x r t * <return> / C-SPC M-< C-M-\\"))
-
-(defalias 'magit-accept-all-lower-smerge\
-  (kmacro "<return> C-c s l C-x C-s C-c k"))
-
-(defalias 'clj-eval-comment
-  (kmacro "C-k C-SPC C-SPC C-u C-c C-e C-x C-x C-SPC SPC ; ; SPC"))
-
-(with-eval-after-load 'cider
-  (define-key cider-mode-map (kbd "<f5>") 'clj-eval-comment))
 
 ;; Packages
 (require 'package)
@@ -228,18 +213,8 @@
          ("C-<" . mc/mark-previous-like-this)
          ("C-c C-<" . mc/mark-all-like-this)))
 
-(use-package expand-region
-  :defer t
-  :bind ("C-=" . er/expand-region))
-
 (use-package dtrt-indent
   :hook (prog-mode . dtrt-indent-mode))
-
-;; Navigating
-(use-package dumb-jump
-  :bind (("M-g j" . dumb-jump-go))
-  :config
-  (add-hook 'xref-backend-functions #'dumb-jump-xref-activate))
 
 ;; Misc
 (use-package magit
@@ -267,16 +242,6 @@
 (add-to-list 'auto-mode-alist '("\\.ts\\'" . typescript-ts-mode))
 (add-to-list 'auto-mode-alist '("\\.tsx\\'" . tsx-ts-mode))
 
-(use-package clojure-mode
-  :defer t
-  :mode ("\\.clj\\'" "\\.cljs\\'" "\\.cljc\\'"))
-
-(use-package cider
-  :defer t
-  :hook (clojure-mode . cider-mode)
-  :config
-  (setq cider-repl-display-help-banner nil))
-
 ;; Org mode
 (setq ispell-program-name "hunspell")
 (setq ispell-dictionary "en_US")
@@ -288,10 +253,6 @@
 
 (setq-default fill-column 80)
 
-(defun sid-org-mode()
-  (local-set-key (kbd "C-c m") 'org-modern-mode))
-(add-hook 'org-mode-hook 'sid-org-mode)
-
 (use-package org
   :mode ("\\.org\\'" . org-mode)
   :config
@@ -299,12 +260,11 @@
   (require 'ob)
   (add-hook 'org-mode-hook (lambda () (require 'org-tempo))))
 
-(use-package org-modern
-  :defer t
-  :commands (org-modern-mode))
-
 (global-set-key (kbd "C-c a") 'org-agenda)
 (setq org-agenda-files (list (expand-file-name "~/org/tasks.org")))
+(setq org-archive-location (expand-file-name "~/org/archive.org::"))
+(setq org-tags-column 80)
+(setq org-agenda-tags-column 80)
 (setq org-log-done 'time)
 
 (load-file custom-file)
