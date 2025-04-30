@@ -181,6 +181,20 @@
       (message "Yanked from kill ring"))))
 (global-set-key (kbd "C-c y") 'sid-yank-relative-path)
 
+(defun sid-to-camelcase (text)
+  "Helper function to convert a string TEXT to camelCase."
+  (let ((words (split-string text "[^a-zA-Z0-9]+")))
+    (concat (downcase (car words))
+            (mapconcat 'capitalize (cdr words) ""))))
+
+(defun sid-region-to-camelcase (start end)
+  "Convert the text in the region to camelCase."
+  (interactive "r")
+  (let ((text (buffer-substring-no-properties start end)))
+    (delete-region start end)
+    (insert (sid-to-camelcase text))))
+(global-set-key (kbd "C-c t c") 'sid-region-to-camelcase)
+
 ;; Packages
 (require 'package)
 (setq package-archives '(("melpa" . "https://melpa.org/packages/")
@@ -228,6 +242,8 @@
                             (add-hook 'before-save-hook 'delete-trailing-whitespace nil t)))
 
 ;; Language specific modes
+(require 'c3-mode)
+
 (use-package tree-sitter
   :defer t
   :hook ((typescript-ts-mode . tree-sitter-mode)
