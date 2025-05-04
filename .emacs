@@ -92,6 +92,9 @@
 (global-set-key (kbd "C-c d") 'duplicate-line)
 (global-set-key (kbd "C-c ;") 'comment-or-uncomment-region)
 (global-set-key (kbd "C-c o") #'mode-line-other-buffer)
+(global-set-key (kbd "<f5>") 'delete-trailing-whitespace)
+
+(global-set-key (kbd "C-c o") #'mode-line-other-buffer)
 
 (defun sid-kill-backward ()
   "Kill text from the cursor to the beginning of the line."
@@ -238,12 +241,7 @@
   :config
   (setq magit-display-buffer-function #'magit-display-buffer-same-window-except-diff-v1))
 
-(add-hook 'prog-mode-hook (lambda ()
-                            (add-hook 'before-save-hook 'delete-trailing-whitespace nil t)))
-
 ;; Language specific modes
-(require 'c3-mode)
-
 (use-package tree-sitter
   :defer t
   :hook ((typescript-ts-mode . tree-sitter-mode)
